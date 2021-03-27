@@ -70,7 +70,7 @@ def predict(model, img):
     temp_img = None
     pred = non_max_suppression(pred, 0.5, 0.5,None)
     #print(pred[0])
-
+    num_boxes  = 0 
     for i, det in enumerate(pred):
             im0 = img_org
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
@@ -100,29 +100,39 @@ def predict(model, img):
                     bbox_new[3] = bbox_new[3] * h
                     #print("class: ", labels[int(cls)])
                     #print("conf: ", float(conf))
+                    num_boxes = num_boxes + 1
                     cv2.rectangle(img_org,(int(bbox_new[0]), int(bbox_new[1])), (int(bbox_new[2]), int(bbox_new[3])), (0,255,0), 3)
-    return img_org    
+    return img_org, num_boxes    
 
 frame_rate = 1
 prev = 0
 
 cap = cv2.VideoCapture("grape.mp4")
 cap.set(cv2.CAP_PROP_FPS, 1)
+frame_temp = None
+check = None
 while(True):
     # Capture frame-by-frame
     # start_time = time.time()
     # print(start_time)
     time_elapsed = time.time() - prev
+    #print(time_elapsed)
     ret, frame = cap.read()
-    #
+    #ß
     #time.sleep(1.0)
     # Our operations on the frame come here
-    #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    if time_elapsed > 1./frame_rate:
+    if time_elapsed > 3: #1./frame_rate:
         prev = time.time()
-        frame = predict(model, frame)
-    # Display the resulting frame
-        cv2.imshow('frame',frame)
+        frame, num_boxes = predict(model, frame)
+        #print("time:", time.time()- prev)
+        frame_temp = frame.copy()
+        check = True
+    # Display the resulting ßframe
+    if check:
+        frame_t = cv2.putText(frame_temp, "So luong chum nho: "+ str(num_boxes), (00, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA, False)
+        cv2.imshow('He thong dem nho',frame_t)
+    else :
+        cv2.imshow('He thong dem nho',frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
